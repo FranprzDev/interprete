@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Intérprete - traducción en vivo español e inglés</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main id="app">
+  <header>
+    <h1>Intérprete</h1>
+    <p class="sub">Traducción en vivo, en tu navegador. Sin instalar nada y sin que tu voz salga de tu equipo.</p>
+  </header>
+
+  <section id="start">
+    <button id="btn-start" class="big">Empezar</button>
+    <details><summary>Avanzado</summary><label><input type="checkbox" id="use-small"> Mejor calidad de voz (más lento, descarga más)</label></details>
+    <p class="hint" id="start-hint">La primera vez descarga unos 250 MB (se guardan en el navegador).</p>
+    <div id="loading" hidden>
+      <div id="load-label">Preparando...</div>
+      <progress id="bar" max="100" value="0"></progress>
+      <div id="load-detail"></div>
+    </div>
+    <p id="error" class="error" hidden></p>
+  </section>
+
+  <section id="live" hidden>
+    <div class="modes">
+      <button id="mode-es" class="mode on">Hablo español, sale inglés</button>
+      <button id="mode-en" class="mode">Escucho inglés, sale español</button>
+    </div>
+    <button id="btn-listen" class="big">Empezar a escuchar</button>
+    <div id="status" class="status"></div>
+    <div id="subtitle" aria-live="polite"></div>
+    <div class="row">
+      <button id="btn-full">Pantalla completa</button>
+      <label><input type="checkbox" id="speak"> Leer en voz alta</label>
+    </div>
+    <details>
+      <summary>Avanzado</summary>
+      <label><input type="checkbox" id="tab-audio"> Escuchar el audio de una pestaña o llamada (Chrome y Edge)</label>
+      <div id="device" class="hint"></div>
+    </details>
+    <div id="history"></div>
+  </section>
+</main>
+<script type="module" src="app.js"></script>
+</body>
+</html>
