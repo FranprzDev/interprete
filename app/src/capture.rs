@@ -68,7 +68,7 @@ where
     let stream = dev.build_input_stream(
         cfg,
         move |data: &[T], _| {
-            let f: Vec<f32> = data.iter().map(|s| f32::from_sample(*s)).collect();
+            let f: Vec<f32> = data.iter().map(|s| f32::from_sample_(*s)).collect();
             let out = rs.push(&to_mono(&f, channels));
             if !out.is_empty() {
                 let _ = tx.send(out);
