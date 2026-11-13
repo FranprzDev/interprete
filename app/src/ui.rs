@@ -85,6 +85,7 @@ pub struct App {
     inputs: Vec<String>,
     outputs: Vec<String>,
     ctx: eframe::egui::Context,
+    subtitles: bool,
 }
 
 fn set_phase(s: &SharedRef, ctx: &eframe::egui::Context, p: Phase) {
@@ -207,6 +208,7 @@ impl App {
             inputs: capture::input_names(),
             outputs: capture::output_names(),
             ctx,
+            subtitles: false,
         }
     }
 
@@ -341,6 +343,7 @@ impl eframe::App for App {
                         }
                     }
                     ui.separator();
+                    ui.checkbox(&mut self.subtitles, "Subtítulos grandes (ventana aparte, siempre visible)");
                     let g = self.shared.lock().unwrap();
                     egui::ScrollArea::vertical().stick_to_bottom(true).auto_shrink([false, false]).show(ui, |ui| {
                         for ln in &g.lines {
@@ -353,6 +356,33 @@ impl eframe::App for App {
                 }
             }
         });
+        if self.subtitles {
+            let last = {
+                let g = self.shared.lock().unwrap();
+                g.lines.last().map(|l| l.translated.clone()).unwrap_or_default()
+            };
+            let mut close = false;
+            ctx.show_viewport_immediate(
+                egui::ViewportId::from_hash_of("subtitulos"),
+                egui::ViewportBuilder::default()
+                    .with_title("Subtítulos")
+                    .with_always_on_top()
+                    .with_inner_size([900.0, 200.0]),
+                |ctx, _| {
+                    egui::CentralPanel::default().show(ctx, |ui| {
+                        ui.centered_and_justified(|ui| {
+                            ui.label(RichText::new(&last).size(44.0).strong());
+                        });
+                    });
+                    if ctx.input(|i| i.viewport().close_requested()) {
+                        close = true;
+                    }
+                },
+            );
+            if close {
+                self.subtitles = false;
+            }
+        }
     }
 
     fn on_exit(&mut self, _gl: Option<&eframe::glow::Context>) {
