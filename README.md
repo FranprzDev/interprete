@@ -38,4 +38,4 @@ Licencia MIT.
 
 ## Versión web (sin instalar)
 
-Abrí https://interprete-traductor.franprzdev.workers.dev en Chrome o Edge, tocá **Empezar** (la primera vez baja unos 200 MB que quedan guardados) y después **Empezar a escuchar**. Corre en el navegador (whisper y traducción por WebGPU/WASM), sin servidor y sin cuenta. Código en `web/`, hosting en Cloudflare con `wrangler deploy`.
+Abrí https://interprete-traductor.franprzdev.workers.dev en Chrome o Edge, tocá **Empezar** (la primera vez baja unos 350 MB que quedan guardados) y después **Empezar a escuchar**. Corre en el navegador (whisper y traducción por WebGPU/WASM), sin servidor y sin cuenta. Código en `web/`, hosting en Cloudflare con `wrangler deploy`.
