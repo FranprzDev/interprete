@@ -15,6 +15,8 @@ const cb = (label) => (p) => {
 
 async function load({ stt, webgpu }) {
   tf = await import(CDN);
+  // Los modelos se bajan por el espejo del mismo sitio (/hf/) para evitar bloqueos de CORS.
+  if (self.location.protocol.startsWith("http") && !self.location.hostname.startsWith("localhost")) tf.env.remoteHost = self.location.origin + "/hf/";
   postMessage({ type: "status", text: "Descargando el modelo de voz..." });
   const id = STT[stt].id;
   try {
