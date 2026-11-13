@@ -1,0 +1,14 @@
+[package]
+name = "interprete"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Traductor simultáneo español <-> inglés, local y gratis"
+
+[dependencies]
+interprete-core = { path = "../core" }
+anyhow = "1"
+eframe = "0.29"
+cpal = "0.15.3"
+rodio = { version = "0.19", default-features = false, features = ["wav"] }
+
