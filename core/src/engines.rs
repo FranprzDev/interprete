@@ -12,7 +12,7 @@ use std::time::{Duration, Instant};
 pub const WHISPER_PORT: u16 = 18710;
 pub const LLAMA_PORT: u16 = 18711;
 
-const STT_TAG: &str = "https://github.com/FranprzDev/vibe-latex/releases/download/0.5.1";
+const STT_TAG: &str = "https://github.com/FranprzDev/interprete/releases/download/engines-v1";
 const LLAMA_TAG: &str = "https://github.com/ggml-org/llama.cpp/releases/download/b12340";
 pub const WHISPER_MODEL_URL: &str = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.bin";
 pub const WHISPER_MODEL_FILE: &str = "ggml-small.bin";
@@ -67,8 +67,8 @@ pub fn assets() -> Result<Vec<Asset>> {
     Ok(vec![
         Asset {
             label: "Motor de voz (whisper)",
-            url: format!("{STT_TAG}/vibe-stt-server-{stt}"),
-            file: format!("vibe-stt-server-{stt}"),
+            url: format!("{STT_TAG}/interprete-whisper-{stt}"),
+            file: format!("interprete-whisper-{stt}"),
             extract_to: Some("whisper"),
         },
         Asset {
@@ -347,7 +347,7 @@ mod tests {
     fn assets_resolve_on_this_platform() {
         let a = assets().unwrap();
         assert_eq!(a.len(), 4);
-        assert!(a[0].url.contains("vibe-latex"));
+        assert!(a[0].url.contains("interprete-whisper"));
         assert!(a[1].url.contains("llama-b12340"));
     }
 

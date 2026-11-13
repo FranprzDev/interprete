@@ -1,0 +1,113 @@
+name: Engines (whisper-server portable)
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: stt-v* release tag to upload the STT server binaries to
+        required: true
+        type: string
+  push:
+    tags:
+      - "engines-v*"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: stt-server-build
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build ${{ matrix.os_name }} ${{ matrix.arch }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            os_name: windows
+            arch: x64
+            archive: zip
+          - os: macos-latest
+            os_name: macos
+            arch: arm64
+            archive: tar.gz
+          - os: macos-15-intel
+            os_name: macos
+            arch: x64
+            archive: tar.gz
+          - os: ubuntu-22.04
+            os_name: linux
+            arch: x64
+            archive: tar.gz
+    env:
+      WHISPER_TAG: v1.9.5
+      BINARY: interprete-whisper-${{ matrix.os_name }}-${{ matrix.arch }}
+      ARCHIVE: interprete-whisper-${{ matrix.os_name }}-${{ matrix.arch }}.${{ matrix.archive }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Clone whisper.cpp
+        run: git clone --depth 1 --branch ${{ env.WHISPER_TAG }} https://github.com/ggml-org/whisper.cpp.git whisper.cpp
+
+      - name: Configure
+        working-directory: whisper.cpp
+        shell: bash
+        run: |
+          FLAGS="-DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DGGML_NATIVE=OFF"
+          if [ "$(uname -m)" = "x86_64" ] || [ "${{ runner.arch }}" = "X64" ]; then
+            FLAGS="$FLAGS -DGGML_AVX=ON -DGGML_AVX2=ON -DGGML_FMA=ON -DGGML_F16C=ON -DGGML_AVX512=OFF"
+          fi
+          cmake -B build $FLAGS
+
+      - name: Build whisper-server
+        working-directory: whisper.cpp
+        run: cmake --build build --config Release --target whisper-server
+
+      - name: Package (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $candidates = @(
+            "whisper.cpp/build/bin/Release/whisper-server.exe",
+            "whisper.cpp/build/bin/whisper-server.exe"
+          )
+          $source = $candidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+          if (-not $source) {
+            throw "whisper-server.exe was not found in the build output"
+          }
+          Copy-Item $source "whisper-server.exe"
+          Compress-Archive -Path "whisper-server.exe" -DestinationPath "$env:ARCHIVE" -Force
+
+      - name: Package (macOS/Linux)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          set -euo pipefail
+          source="whisper.cpp/build/bin/whisper-server"
+          if [ ! -f "$source" ]; then
+            echo "whisper-server was not found in the build output"
+            exit 1
+          fi
+          cp "$source" whisper-server
+          chmod +x whisper-server
+          tar -czf "$ARCHIVE" whisper-server
+
+      - name: Upload to release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            tag="${{ github.event.inputs.release_tag }}"
+          else
+            tag="${GITHUB_REF_NAME}"
+          fi
+          if ! gh release view "$tag" >/dev/null 2>&1; then
+            gh release create "$tag" --latest=false --title "$tag" --notes "$tag STT server binaries"
+          fi
+          gh release upload "$tag" "$ARCHIVE" --clobber
+
