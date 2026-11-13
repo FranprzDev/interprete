@@ -19,8 +19,10 @@ async function load({ stt, webgpu }) {
   if (self.location.protocol.startsWith("http") && !self.location.hostname.startsWith("localhost")) tf.env.remoteHost = self.location.origin + "/hf/";
   postMessage({ type: "status", text: "Descargando el modelo de voz..." });
   const id = STT[stt].id;
+  let gpu = false;
+  try { gpu = webgpu && !!(await navigator.gpu.requestAdapter()); } catch {}
   try {
-    if (!webgpu) throw new Error("sin webgpu");
+    if (!gpu) throw new Error("sin webgpu");
     asr = await tf.pipeline("automatic-speech-recognition", id, {
       device: "webgpu",
       dtype: { encoder_model: "fp32", decoder_model_merged: "q4" },
@@ -29,12 +31,12 @@ async function load({ stt, webgpu }) {
     postMessage({ type: "device", device: "webgpu" });
   } catch (e) {
     files.clear();
-    asr = await tf.pipeline("automatic-speech-recognition", id, { dtype: "q8", progress_callback: cb("Modelo de voz") });
+    asr = await tf.pipeline("automatic-speech-recognition", id, { device: "wasm", dtype: "q8", progress_callback: cb("Modelo de voz") });
     postMessage({ type: "device", device: "wasm" });
   }
   postMessage({ type: "status", text: "Descargando traductores..." });
   for (const l of ["es", "en"]) {
-    mt[l] = await tf.pipeline("translation", MT[l], { dtype: "q8", progress_callback: cb("Traductor") });
+    mt[l] = await tf.pipeline("translation", MT[l], { device: "wasm", dtype: "q8", progress_callback: cb("Traductor") });
   }
   postMessage({ type: "ready" });
 }
