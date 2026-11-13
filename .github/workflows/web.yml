@@ -1,0 +1,41 @@
+name: Web
+
+on:
+  push:
+    branches: [main]
+    paths: ["web/**", ".github/workflows/web.yml"]
+  pull_request:
+    paths: ["web/**", ".github/workflows/web.yml"]
+
+jobs:
+  e2e:
+    name: web e2e (audio real -> whisper -> traducción en JS)
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: sudo apt-get update && sudo apt-get install -y espeak-ng
+      - name: Frases de prueba
+        working-directory: web
+        run: |
+          mkdir -p wav
+          espeak-ng -v es -s 150 -w wav/es1.wav "Hola, buenos días. Hoy vamos a hablar de cómo funciona la energía solar."
+          espeak-ng -v es -s 150 -w wav/es2.wav "Mañana tengo una reunión con el profesor para revisar el proyecto."
+          espeak-ng -v en -s 150 -w wav/en1.wav "Good morning everyone. Today we will talk about how solar energy works."
+          espeak-ng -v en -s 150 -w wav/en2.wav "Tomorrow I have a meeting with the professor to review the project."
+      - run: npm install
+        working-directory: web
+      - run: node --check app.js && node --check worker.js && node --check vad.js
+        working-directory: web
+      - uses: actions/cache@v4
+        with: { path: web/node_modules/@huggingface/transformers/.cache, key: hf-models-web-v1 }
+      - name: Test (whisper base)
+        run: npm test | tee base.txt
+        working-directory: web
+      - name: Medición (whisper small)
+        run: STT=small npm test | tee small.txt || true
+        working-directory: web
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: web-resultados, path: "web/*.txt" }

@@ -1,0 +1,7 @@
+test
+node_modules
+wav
+package.json
+package-lock.json
+*.txt
+.assetsignore

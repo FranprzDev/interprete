@@ -1,0 +1,6 @@
+{
+  "name": "interprete-traductor",
+  "main": "cloudflare/worker.js",
+  "compatibility_date": "2025-11-01",
+  "assets": { "directory": "./web", "binding": "ASSETS", "run_worker_first": ["/hf/*"] }
+}
