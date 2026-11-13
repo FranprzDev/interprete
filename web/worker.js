@@ -26,17 +26,18 @@ async function load({ stt, webgpu }) {
     asr = await tf.pipeline("automatic-speech-recognition", id, {
       device: "webgpu",
       dtype: { encoder_model: "fp32", decoder_model_merged: "q4" },
-      progress_callback: cb("Modelo de voz"),
+      progress_callback: cb("Paso 1 de 3: modelo de voz"),
     });
     postMessage({ type: "device", device: "webgpu" });
   } catch (e) {
     files.clear();
-    asr = await tf.pipeline("automatic-speech-recognition", id, { device: "wasm", dtype: "q8", progress_callback: cb("Modelo de voz") });
+    asr = await tf.pipeline("automatic-speech-recognition", id, { device: "wasm", dtype: "q8", progress_callback: cb("Paso 1 de 3: modelo de voz") });
     postMessage({ type: "device", device: "wasm" });
   }
-  postMessage({ type: "status", text: "Descargando traductores..." });
+  let n = 1;
   for (const l of ["es", "en"]) {
-    mt[l] = await tf.pipeline("translation", MT[l], { device: "wasm", dtype: "q8", progress_callback: cb("Traductor") });
+    files.clear(); n++;
+    mt[l] = await tf.pipeline("translation", MT[l], { device: "wasm", dtype: "q8", progress_callback: cb(`Paso ${n} de 3: traductor ${l === "es" ? "español a inglés" : "inglés a español"}`) });
   }
   postMessage({ type: "ready" });
 }
